@@ -1,3 +1,5 @@
+// ignore_for_file: collection_methods_unrelated_type
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pizzaprint_v4/domain/model/food.dart';
@@ -13,8 +15,9 @@ class ProductCard extends StatelessWidget {
     final cart = Provider.of<CartProvider>(context, listen: false);
 
     // Define the size of the food item (this could come from user input if needed)
-    final String size = "Medium";  // Or fetch from a dropdown or selection widget
-    final int quantity = 1;  // Default quantity to add, could also be dynamic
+    final String size =
+        "Medium"; // Or fetch from a dropdown or selection widget
+    final int quantity = 1; // Default quantity to add, could also be dynamic
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -25,7 +28,9 @@ class ProductCard extends StatelessWidget {
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(15),
+              ),
               child: Image.network(
                 food.image,
                 width: double.infinity,
@@ -66,7 +71,10 @@ class ProductCard extends StatelessWidget {
                   children: [
                     // Price Container
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.orange,
                         borderRadius: BorderRadius.circular(12),
@@ -84,16 +92,33 @@ class ProductCard extends StatelessWidget {
                     // Add to Cart Button
                     InkWell(
                       onTap: () {
-                        // Add to Cart with the selected size and quantity
-                        cart.addToCart(food, size, quantity);
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${food.name} added to cart!'),
-                            duration: const Duration(seconds: 2),
-                          ),
+                        // Check if the item already exists in the cart (regardless of size)
+                        bool itemExists = cart.cartItems.values.any(
+                          (item) => item.food.id == food.id,
                         );
+
+                        if (itemExists) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${food.name} is already in the cart!',
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        } else {
+                          // Add to Cart with the selected size and quantity
+                          cart.addToCart(food, size, quantity);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${food.name} added to cart!'),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
                       },
+
                       splashColor: Colors.orange.withOpacity(0.3),
                       highlightColor: Colors.orange.withOpacity(0.2),
                       child: Container(
@@ -101,7 +126,10 @@ class ProductCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
-                            colors: [Colors.orange.shade400, Colors.orange.shade700],
+                            colors: [
+                              Colors.orange.shade400,
+                              Colors.orange.shade700,
+                            ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
