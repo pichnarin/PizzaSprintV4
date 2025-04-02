@@ -20,11 +20,11 @@ class FoodService {
     }
   }
 
-  
+
   Future<List<Food>> getFoodByCategory(String category) async {
     try {
-      http.Response response = await apiService.get('foods/category/$category');
-      
+      http.Response response = await apiService.get('foods/fetch-by-category/$category');
+
       if (response.statusCode == 200) {
         List<dynamic> jsonData = jsonDecode(response.body)['data'];
         return jsonData.map((food) => Food.fromJson(food)).toList();
@@ -35,6 +35,4 @@ class FoodService {
       throw Exception('Error: $e');
     }
   }
-  
-  
 }

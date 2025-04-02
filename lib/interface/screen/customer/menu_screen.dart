@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:pizzaprint_v4/domain/model/categories.dart';
-import 'package:pizzaprint_v4/domain/model/categories.dart' as CustomerCategories;
 import 'package:pizzaprint_v4/domain/model/food.dart';
 import 'package:pizzaprint_v4/domain/provider/cart_provider.dart';
-import 'package:pizzaprint_v4/domain/provider/category_provider.dart';
 import 'package:pizzaprint_v4/domain/provider/food_provider.dart';
-import 'package:pizzaprint_v4/interface/component/customer_widget/category_tab_bar.dart';
+import 'package:pizzaprint_v4/domain/service/category_service.dart';
 import 'package:pizzaprint_v4/interface/component/customer_widget/custom_app_bar.dart';
 import 'package:pizzaprint_v4/interface/component/customer_widget/product_grid_view.dart';
 import 'package:pizzaprint_v4/interface/component/customer_widget/search_bar.dart';
 import 'package:pizzaprint_v4/interface/component/customer_widget/size_selection_screen.dart';
 import 'package:provider/provider.dart';
 
-// ignore: must_be_immutable
 class MenuScreen extends StatefulWidget {
   String? selectedLocation;
 
@@ -22,29 +19,44 @@ class MenuScreen extends StatefulWidget {
   _MenuScreenState createState() => _MenuScreenState();
 }
 
-class _MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateMixin {
+class _MenuScreenState extends State<MenuScreen> {
   final TextEditingController _searchController = TextEditingController();
   final int _selectedQuantity = 1;
-  late TabController _tabController;
+  Category? _selectedCategory;
+  final CategoryService _categoryService = CategoryService();
+  bool _isLoading = false;
+  String _error = '';
+  List<Category> _categories = [];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<FoodProvider>(context, listen: false).fetchAllFoods();
-      Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+      _fetchCategories();
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final categoryProvider = Provider.of<CategoryProvider>(context);
-    if (categoryProvider.categories.isNotEmpty && _tabController == null) {
-      _tabController = TabController(
-        length: categoryProvider.categories.length,
-        vsync: this,
-      );
+  Future<void> _fetchCategories() async {
+    setState(() {
+      _isLoading = true;
+      _error = '';
+    });
+
+    try {
+      final fetchedCategories = await _categoryService.fetchCategories();
+      // Add the "All" category at the beginning of the list
+      setState(() {
+        _categories = [Category(id: 0, name: 'All')] + fetchedCategories;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Error fetching categories: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -52,25 +64,15 @@ class _MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateM
     Provider.of<FoodProvider>(context, listen: false).filterFoodsBySearch(query);
   }
 
-  void _filterByCategory(Category category) {
-    Provider.of<FoodProvider>(context, listen: false).getFoodByCategory(category.id);
-  }
-
   void _navigateToSizeSelection(BuildContext context, Food food) async {
     final selectedSize = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => SizeSelectionScreen(food: food),
-      ),
+      MaterialPageRoute(builder: (context) => SizeSelectionScreen(food: food)),
     );
 
     if (!mounted || selectedSize == null) return;
 
-    Provider.of<CartProvider>(context, listen: false).addToCart(
-      food,
-      selectedSize,
-      _selectedQuantity,
-    );
+    Provider.of<CartProvider>(context, listen: false).addToCart(food, selectedSize, _selectedQuantity);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Added ${food.name} ($selectedSize) to cart")),
@@ -86,21 +88,15 @@ class _MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateM
           children: [
             ListTile(
               title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context, 'Home');
-              },
+              onTap: () => Navigator.pop(context, 'Home'),
             ),
             ListTile(
               title: const Text('Office'),
-              onTap: () {
-                Navigator.pop(context, 'Office');
-              },
+              onTap: () => Navigator.pop(context, 'Office'),
             ),
             ListTile(
               title: const Text('Other'),
-              onTap: () {
-                Navigator.pop(context, 'Other');
-              },
+              onTap: () => Navigator.pop(context, 'Other'),
             ),
           ],
         );
@@ -117,25 +113,6 @@ class _MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final foodProvider = Provider.of<FoodProvider>(context);
-    final categoryProvider = Provider.of<CategoryProvider>(context);
-
-    if (foodProvider.isLoading || categoryProvider.isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Loading...')),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (foodProvider.error.isNotEmpty || categoryProvider.error.isNotEmpty) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: Center(
-          child: Text(foodProvider.error.isNotEmpty
-              ? foodProvider.error
-              : categoryProvider.error),
-        ),
-      );
-    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -144,23 +121,93 @@ class _MenuScreenState extends State<MenuScreen> with SingleTickerProviderStateM
         selectedLocation: widget.selectedLocation,
         onLocationPressed: _selectLocation,
       ),
-      body: Column(
-        children: [
-          SearchBarWidget(
-            controller: _searchController,
-            onSearch: _onSearch,
-          ),
-          if (categoryProvider.categories.isNotEmpty)
-            CategoryTabBar(
-              tabController: _tabController,
-              categories: categoryProvider.categories.cast<CustomerCategories.Category>(),
-              onCategorySelected: _filterByCategory,
+      body: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SearchBarWidget(controller: _searchController, onSearch: _onSearch),
+            const SizedBox(height: 10),
+
+            /// Categories Section
+            Text(
+              "Categories",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-          ProductGridView(
-            filteredProducts: foodProvider.filteredFoods,
-            onProductTap: _navigateToSizeSelection,
-          ),
-        ],
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 50,
+              child: _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : _error.isNotEmpty
+                  ? Center(child: Text(_error, style: TextStyle(color: Colors.red)))
+                  : ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final category = _categories[index];
+                  final isSelected = _selectedCategory?.id == category.id;
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (category.name == 'All') {
+                          // Show all foods when "All" is selected
+                          _selectedCategory = null;
+                          Provider.of<FoodProvider>(context, listen: false).fetchAllFoods();
+                        } else {
+                          if (_selectedCategory?.id == category.id) {
+                            _selectedCategory = null;
+                            Provider.of<FoodProvider>(context, listen: false).fetchAllFoods();
+                          } else {
+                            _selectedCategory = category;
+                            Provider.of<FoodProvider>(context, listen: false).getFoodByCategory(category.name);
+                          }
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.orange : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Center(
+                        child: Text(
+                          category.name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            /// Foods Section
+            Text(
+              "Available Foods",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: foodProvider.isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : foodProvider.error.isNotEmpty
+                  ? Center(child: Text(foodProvider.error, style: TextStyle(color: Colors.red)))
+                  : ProductGridView(
+                filteredProducts: foodProvider.filteredFoods,
+                onProductTap: _navigateToSizeSelection,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

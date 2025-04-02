@@ -33,13 +33,13 @@ class FoodProvider with ChangeNotifier {
     }
   }
 
-  Future<void> getFoodByCategory(String categoryId) async {
+  Future<void> getFoodByCategory(String categoryName) async {
     _isLoading = true;
     _error = '';
     notifyListeners();
 
     try {
-      _filteredFoods = await _foodService.getFoodByCategory(categoryId);
+      _filteredFoods = await _foodService.getFoodByCategory(categoryName);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
