@@ -47,44 +47,51 @@
 // }
 import 'package:flutter/material.dart';
 
-class UserProfileScreen extends StatelessWidget {
+class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
 
   @override
+  _UserProfileScreenState createState() => _UserProfileScreenState();
+}
+
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:Colors.white,
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          const Center(
-            child: Text(
-              'Profile',
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.w700,
-                color: Color.fromRGBO(64, 105, 225, 1),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+            color: Color.fromRGBO(64, 105, 225, 1),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0, // Remove shadow
+      ),
+      body: SingleChildScrollView( // Make it scrollable
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            const Center(
+              child: CircleAvatar(
+                radius: 50,
+                backgroundImage: NetworkImage(
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6hw785Erl1suQt1-j1UM6ejHtmOeJ1XnankcmnFlcSrVOpU1K53aZli3ahKL88fsnX68hJC7_zsWOmiKOi74ceQ'),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          const CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage(
-                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6hw785Erl1suQt1-j1UM6ejHtmOeJ1XnankcmnFlcSrVOpU1K53aZli3ahKL88fsnX68hJC7_zsWOmiKOi74ceQ'),
-          ),
-          const SizedBox(height: 20),
-          buildUserInfoDisplay('Marn Vannda', 'Name'),
-          buildUserInfoDisplay('+1 234 567 890', 'Phone'),
-          buildUserInfoDisplay('VD.skull@gmail.com', 'Email'),
-          Expanded(
-            child: buildAbout(
+            const SizedBox(height: 20),
+            buildUserInfoDisplay('Marn Vannda', 'Name'),
+            buildUserInfoDisplay('+1 234 567 890', 'Phone'),
+            buildUserInfoDisplay('VD.skull@gmail.com', 'Email'),
+            buildAbout(
                 "This is a short bio about the user. You can replace it with actual content."),
-          ),
-          const SizedBox(height: 20),
-          buildLogoutButton(context),
-          const SizedBox(height: 30),
-        ],
+            const SizedBox(height: 20),
+            buildLogoutButton(context),
+            const SizedBox(height: 30),
+          ],
+        ),
       ),
     );
   }
@@ -104,13 +111,11 @@ class UserProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Container(
-              width: 350,
-              height: 40,
               decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.grey, width: 1)),
               ),
-              child: Align(
-                alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   value,
                   style: const TextStyle(fontSize: 16, height: 1.4),
@@ -136,13 +141,11 @@ class UserProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Container(
-              width: 350,
-              height: 100,
               decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.grey, width: 1)),
               ),
-              child: Align(
-                alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   aboutText,
                   style: const TextStyle(fontSize: 16, height: 1.4),

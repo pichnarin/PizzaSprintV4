@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pizzaprint_v4/domain/model/food.dart';
-import 'size_selection_screen.dart';
+import 'package:pizzaprint_v4/domain/provider/cart_provider.dart';
 
 class ProductCard extends StatelessWidget {
   final Food food;
@@ -9,17 +10,22 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+
+    // Define the size of the food item (this could come from user input if needed)
+    final String size = "Medium";  // Or fetch from a dropdown or selection widget
+    final int quantity = 1;  // Default quantity to add, could also be dynamic
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      color: Colors.white, // Changed card color to white
-      elevation: 5, // Increased elevation for a little shadow
+      color: Colors.white,
+      elevation: 5,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(15)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
               child: Image.network(
                 food.image,
                 width: double.infinity,
@@ -31,7 +37,7 @@ class ProductCard extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-                // Food name
+                // Food Name
                 Text(
                   food.name,
                   style: const TextStyle(
@@ -41,10 +47,10 @@ class ProductCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 4),
-                
-                // Food description (new addition)
+
+                // Food Description
                 Text(
-                  food.description,  // Add description with fallback text
+                  food.description,
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
@@ -53,14 +59,14 @@ class ProductCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 4),
-                
-                // Price and Add button
+
+                // Price and Add Button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // Price Container
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.orange,
                         borderRadius: BorderRadius.circular(12),
@@ -74,15 +80,24 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
+
+                    // Add to Cart Button
                     InkWell(
                       onTap: () {
-                        // Navigate to SizeSelectionScreen
-                        _navigateToSizeSelectionScreen(context);
+                        // Add to Cart with the selected size and quantity
+                        cart.addToCart(food, size, quantity);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${food.name} added to cart!'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
                       },
-                      splashColor: Colors.orange.withOpacity(0.3),  // Splash effect on tap
-                      highlightColor: Colors.orange.withOpacity(0.2),  // Highlight effect on tap
+                      splashColor: Colors.orange.withOpacity(0.3),
+                      highlightColor: Colors.orange.withOpacity(0.2),
                       child: Container(
-                        padding: const EdgeInsets.all(12),  // Increased padding for a larger button
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
@@ -101,7 +116,7 @@ class ProductCard extends StatelessWidget {
                         child: const Icon(
                           Icons.add,
                           color: Colors.white,
-                          size: 28,  // Larger icon size for better visibility
+                          size: 28,
                         ),
                       ),
                     ),
@@ -111,16 +126,6 @@ class ProductCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // Function to navigate to the SizeSelectionScreen
-  void _navigateToSizeSelectionScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SizeSelectionScreen(food: food),
       ),
     );
   }

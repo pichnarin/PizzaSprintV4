@@ -131,15 +131,15 @@ class _CreateAccountState extends State<CreateAccount> {
             ),
             const SizedBox(height: PizzaSpacings.l),
             Center(
-              child: CustomButton(
-                buttonText: 'Create Account',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const FillInProfileInfo()),
-                  );
-                },
-              ),
+              // child: CustomButton(
+              //   buttonText: 'Create Account',
+              //   onPressed: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(builder: (context) => const FillInProfileInfo()),
+              //     );
+              //   },
+              // ),
             ),
             const SizedBox(height: PizzaSpacings.l),
             const OrDivider(text: 'or continue with'),
