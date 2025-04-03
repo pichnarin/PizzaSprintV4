@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../domain/service/order_service.dart';
 import 'accepted_order_screen.dart';
+
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
 
@@ -15,8 +16,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   void initState() {
     super.initState();
-    orders =
-        OrderService().fetchAssigningOrders(); 
+    orders = OrderService().fetchAssigningOrders();
   }
 
   @override
@@ -64,24 +64,33 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         Row(
                           children: [
                             const CircleAvatar(
-                              backgroundImage:
-                                  AssetImage('assets/images/user1.png'),
+                              backgroundImage: AssetImage(
+                                'assets/images/user1.png',
+                              ),
                             ),
                             const SizedBox(width: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(order['customerName'],
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
+                                Text(
+                                  order['customerName'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 1),
+                                    horizontal: 6,
+                                    vertical: 1,
+                                  ),
                                   decoration: BoxDecoration(
-                                      color: Colors.amber,
-                                      borderRadius: BorderRadius.circular(18)),
-                                  child: Text(order['paymentMethod'],
-                                      style: const TextStyle(fontSize: 12)),
+                                    color: Colors.amber,
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: Text(
+                                    order['paymentMethod'],
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
                                 ),
                               ],
                             ),
@@ -90,11 +99,16 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text("\$${order['totalAmount']}",
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
-                            Text("${order['distance'] ?? 'N/A'} km",
-                                style: const TextStyle(color: Colors.grey)),
+                            Text(
+                              "\$${order['totalAmount']}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              "${order['distance'] ?? 'N/A'} km",
+                              style: const TextStyle(color: Colors.grey),
+                            ),
                           ],
                         ),
                       ],
@@ -103,18 +117,22 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
                     // Pickup Location
                     const Text('PICK UP', style: TextStyle(color: Colors.grey)),
-                    Text(order['pickupLocation'] ?? 'Unknown',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      order['pickupLocation'] ?? 'Unknown',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 8),
                     const Divider(),
 
                     // Drop Off Location
-                    const Text('DROP OFF',
-                        style: TextStyle(color: Colors.grey)),
+                    const Text(
+                      'DROP OFF',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                     Text(
-                        order['customerAddress']['street'] +
-                            ", " + order['customerAddress']['city'],
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                      "${order['customerAddress']['street']}, ${order['customerAddress']['city']}",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 16),
                     const Divider(),
 
@@ -143,11 +161,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Paid Amount',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text("\$${order['totalPaid']}",
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
+                        const Text(
+                          'Paid Amount',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "\$${order['totalPaid']}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -160,8 +181,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         _buildActionButton(
                           icon: Icons.phone,
                           text: 'Call',
-                          backgroundColor:
-                              const Color(0xFFB0E0C2), 
+                          backgroundColor: const Color(0xFFB0E0C2),
                           textColor: Colors.black,
                         ),
                         const SizedBox(width: 10),
@@ -185,8 +205,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     const Divider(),
 
                     // Order Items Section
-                    const Text("Order Items",
-                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Order Items",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     ...orderItems.map((item) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -210,36 +232,41 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           print("Order object: $order");
 
                           // Proceed if the order ID exists
-                          String orderId = order['orderId']?.toString() ?? ''; 
+                          String orderId = order['orderId']?.toString() ?? '';
                           if (orderId.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text("Invalid order ID.")),
+                                content: Text("Invalid order ID."),
+                              ),
                             );
                             return;
                           }
 
-                          bool isAccepted =
-                              await OrderService().acceptOrder(orderId);
+                          bool isAccepted = await OrderService().acceptOrder(
+                            orderId,
+                          );
 
                           if (isAccepted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content:
-                                      Text("Order accepted successfully!")),
+                                content: Text("Order accepted successfully!"),
+                              ),
                             );
 
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) =>
-                                      PickupScreen(order: order)),
+                                builder:
+                                    (context) => PickupScreen(order: order),
+                              ),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text(
-                                      "Failed to accept the order. Try again.")),
+                                content: Text(
+                                  "Failed to accept the order. Try again.",
+                                ),
+                              ),
                             );
                           }
                         },
@@ -281,9 +308,7 @@ Widget _buildActionButton({
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18),
       ),
       child: Column(

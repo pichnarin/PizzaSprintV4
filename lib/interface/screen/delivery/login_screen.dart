@@ -5,7 +5,7 @@ import '../../../domain/provider/user_provider.dart';
 import '../../component/driver_widget/delivery_custom_text_button.dart';
 import '../../component/driver_widget/delivery_fill_in_profile_textfield.dart';
 import '../../theme/app_pallete.dart';
-import '../customer/home_screen.dart';
+import 'home_screen.dart';
 
 
 class LoginScreen extends StatefulWidget {
