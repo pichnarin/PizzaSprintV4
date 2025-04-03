@@ -4,14 +4,19 @@ import 'package:http/http.dart' as http;
 
 import '../../env/environment.dart';
 import '../../env/user_local_storage/secure_storage.dart';
+import '../model/user.dart';
 
 class UserProvider with ChangeNotifier {
-  bool isLoading = false; // Track loading state
-  String? errorMessage; // Store errors
+  bool isLoading = false;
+  String? errorMessage;
+  User? _user;
+
+  User? get user => _user;
+  String? get error => errorMessage;
 
   Future<bool> login(String email, String password) async {
     isLoading = true;
-    notifyListeners(); // Notify UI to update
+    notifyListeners();
 
     try {
       final response = await http.post(
@@ -23,23 +28,25 @@ class UserProvider with ChangeNotifier {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         final String jwtToken =
-            data['token'] ?? 'No JWT received'; // Handle missing key
+            data['token'] ?? 'No JWT received';
 
-        // Store the JWT token securely
         await secureLocalStorage.persistentToken(jwtToken);
 
-        // Retrieve the stored token to verify
+        // Store user data
+        _user = User.fromJson(data['data']);
+        print("User login successful");
+        print("User Data: ${_user!.name}, ${_user!.email}");
+
         final String? storedToken = await secureLocalStorage.retrieveToken();
 
-        // Debug prints
         print('Stored token: $storedToken');
         print("User login successful");
         print("Response body: ${response.body}");
 
-        // Successfully logged in
+
         isLoading = false;
         notifyListeners();
-        return true; // Login was successful
+        return true;
       } else {
         errorMessage = "Invalid email or password";
       }
@@ -50,6 +57,9 @@ class UserProvider with ChangeNotifier {
 
     isLoading = false;
     notifyListeners();
-    return false; // Login failed
+    return false;
   }
+
+
+
 }

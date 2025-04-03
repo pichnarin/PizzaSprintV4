@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:pizzaprint_v4/interface/screen/delivery/profile_setting.dart';
+
 import '../../component/driver_widget/delivery_custom_bottom_navigation_bar.dart';
-import '../../component/driver_widget/delivery_order_card.dart';
 import 'delivery_history.dart';
-import 'notification_screen.dart';
 import 'order.dart';
 
 
@@ -21,10 +21,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _screens = [
       HomeScreenContent(), 
-      ActiveOrder(),
+      OrdersScreen(),
       DeliveryHistory(),
-      DeliveryHistory(),
-      //ProfileSetting(),
+      ProfileSetting(),
     ];
   }
 
@@ -34,6 +33,8 @@ class _HomeScreenState extends State<HomeScreen> {
       _currentIndex = index;
     });
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class HomeScreenContent extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold( 
@@ -60,37 +62,17 @@ class HomeScreenContent extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.notifications_none, color: Colors.black),
             onPressed: () {
-              Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (context) => NotificationScreen())
-              );
+              // Navigator.push(
+              //   context, 
+              //   MaterialPageRoute(builder: (context) => NotificationScreen())
+              // );
             },
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Container(
-            color: Colors.grey[300],
-          ),
-          Positioned(
-            bottom: 80,
-            left: 20,
-            right: 20,
-            child: OrderCard(
-              name: 'Steve Brown',
-              avatar: 'assets/images/user1.png',
-              paymentMethod: 'ABA',
-              price: '1.75',
-              distance: '5.1',
-              pickupLocation: 'Street360',
-              dropoffLocation: '234 ToulKork St, PhnomPenh',
-              onAccept: () {},
-              onIgnore: () {},
-            ),
-          ),
-        ],
-      ),
+      
+      
+       
     );
   }
 }

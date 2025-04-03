@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:pizzaprint_v4/interface/theme/app_pallete.dart';
+import 'package:provider/provider.dart';
+
 import '../../../domain/provider/user_provider.dart';
 import '../../component/driver_widget/delivery_custom_text_button.dart';
 import '../../component/driver_widget/delivery_fill_in_profile_textfield.dart';
-import 'home_screen.dart';
+import '../../theme/app_pallete.dart';
+import '../customer/home_screen.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -37,6 +39,8 @@ class _LoginScreenState extends State<LoginScreen> {
       isLoading = true;
       errorMessage = null;
     });
+    // Fetch UserProvider from the context
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
 
     bool isLoginSuccessful = await userProvider.login(email, password);
 
@@ -45,9 +49,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (isLoginSuccessful) {
+    
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()), // Navigate to a home screen or dashboard
+        MaterialPageRoute(builder: (context) => HomeScreen()), 
       );
     } else {
       setState(() {
