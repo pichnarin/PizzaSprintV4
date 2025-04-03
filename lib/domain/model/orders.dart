@@ -55,7 +55,7 @@ class Order {
       customerId: json['customer_id'],
       driverId: json['driver_id'],
       addressId: json['address_id'],
-      orderStatus: json['order_status'],
+      orderStatus: json['status'],
       paymentMethod: json['payment_method'],
       quantity: json['quantity'],
       total: json['total'],

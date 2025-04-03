@@ -7,6 +7,9 @@ class Environment{
 
   static const String mapboxApiKey = "pk.eyJ1IjoicGljaG5hcmluIiwiYSI6ImNtOHRxNm9teTBkZ3kybHNlcHN1bGRtMWwifQ.ehVeRVwFr3IRdknFt3x9Fg";
 
+  //pizza sprint company location
+  static const double latitude = 11.538892;
+  static const double longitude = 104.833429;
 }
 
 final Environment environment = Environment();

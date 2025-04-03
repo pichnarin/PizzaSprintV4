@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pizzaprint_v4/env/environment.dart';
 
 import '../../../domain/service/order_service.dart';
 import 'accepted_order_screen.dart';
@@ -63,9 +64,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       children: [
                         Row(
                           children: [
-                            const CircleAvatar(
-                              backgroundImage: AssetImage(
-                                'assets/images/user1.png',
+                            CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                order['customerAvatar'],
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -106,7 +107,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                               ),
                             ),
                             Text(
-                              "${order['distance'] ?? 'N/A'} km",
+                              "${order['address']['city']}, ${order['address']['state']}",
                               style: const TextStyle(color: Colors.grey),
                             ),
                           ],
@@ -118,7 +119,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     // Pickup Location
                     const Text('PICK UP', style: TextStyle(color: Colors.grey)),
                     Text(
-                      order['pickupLocation'] ?? 'Unknown',
+                      order['address']['reference'] ?? 'Unknown',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
@@ -130,7 +131,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       style: TextStyle(color: Colors.grey),
                     ),
                     Text(
-                      "${order['customerAddress']['street']}, ${order['customerAddress']['city']}",
+                      "${order['address']['reference']}, ${order['address']['city']}, ${order['address']['state']}, ${order['address']['zip']}, ${order['address']['latitude']}, ${order['address']['longitude']}",
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
@@ -138,7 +139,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
                     // Noted Section
                     const Text('NOTED', style: TextStyle(color: Colors.grey)),
-                    Text(order['note'] ?? "No special instructions."),
+                    Text(order['notes'] ?? "No special instructions."),
                     const SizedBox(height: 16),
                     const Divider(),
 
@@ -166,7 +167,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "\$${order['totalPaid']}",
+                          "\$${order['totalAmount']}",
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -241,9 +242,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
                             );
                             return;
                           }
-
                           bool isAccepted = await OrderService().acceptOrder(
-                            orderId,
+                            orderId, Environment.latitude, Environment.longitude,
                           );
 
                           if (isAccepted) {

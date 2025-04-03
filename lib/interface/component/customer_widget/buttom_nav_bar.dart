@@ -4,6 +4,8 @@ import 'package:pizzaprint_v4/interface/screen/customer/cart_screen.dart';
 import 'package:pizzaprint_v4/interface/screen/customer/menu_screen.dart';
 import 'package:pizzaprint_v4/interface/screen/customer/profile_screen.dart';
 
+import '../../screen/customer/order_detail_screen.dart';
+
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -29,6 +31,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
         case 2:
           _currentScreen = const UserProfileScreen();
           break;
+          case 3:
+          _currentScreen = OrderDetailScreen();
+          break;
       }
     });
   }
@@ -44,6 +49,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
           TabItem(icon: Icons.local_pizza, title: "Menu"),
           TabItem(icon: Icons.shopping_bag, title: "Cart"),
           TabItem(icon: Icons.person, title: "Profile"),
+          TabItem(icon: Icons.history, title: "Order History"),
         ],
         initialActiveIndex: _selectedIndex,
         onTap: _onTabTapped,
