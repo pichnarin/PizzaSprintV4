@@ -61,7 +61,10 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   void _onSearch(String query) {
-    Provider.of<FoodProvider>(context, listen: false).filterFoodsBySearch(query);
+    Provider.of<FoodProvider>(
+      context,
+      listen: false,
+    ).filterFoodsBySearch(query);
   }
 
   void _navigateToSizeSelection(BuildContext context, Food food) async {
@@ -72,7 +75,10 @@ class _MenuScreenState extends State<MenuScreen> {
 
     if (!mounted || selectedSize == null) return;
 
-    Provider.of<CartProvider>(context, listen: false).addToCart(food, selectedSize, _selectedQuantity);
+    Provider.of<CartProvider>(
+      context,
+      listen: false,
+    ).addToCart(food, selectedSize, _selectedQuantity);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Added ${food.name} ($selectedSize) to cart")),
@@ -137,56 +143,81 @@ class _MenuScreenState extends State<MenuScreen> {
             const SizedBox(height: 10),
             SizedBox(
               height: 50,
-              child: _isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : _error.isNotEmpty
-                  ? Center(child: Text(_error, style: TextStyle(color: Colors.red)))
-                  : ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final category = _categories[index];
-                  final isSelected = _selectedCategory?.id == category.id;
-
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (category.name == 'All') {
-                          // Show all foods when "All" is selected
-                          _selectedCategory = null;
-                          Provider.of<FoodProvider>(context, listen: false).fetchAllFoods();
-                        } else {
-                          if (_selectedCategory?.id == category.id) {
-                            _selectedCategory = null;
-                            Provider.of<FoodProvider>(context, listen: false).fetchAllFoods();
-                          } else {
-                            _selectedCategory = category;
-                            Provider.of<FoodProvider>(context, listen: false).getFoodByCategory(category.name);
-                          }
-                        }
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                      margin: const EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.orange : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Center(
+              child:
+                  _isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : _error.isNotEmpty
+                      ? Center(
                         child: Text(
-                          category.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : Colors.black,
-                          ),
+                          _error,
+                          style: TextStyle(color: Colors.red),
                         ),
+                      )
+                      : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _categories.length,
+                        itemBuilder: (context, index) {
+                          final category = _categories[index];
+                          final isSelected =
+                              _selectedCategory?.id == category.id;
+
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                if (category.name == 'All') {
+                                  // Show all foods when "All" is selected
+                                  _selectedCategory = null;
+                                  Provider.of<FoodProvider>(
+                                    context,
+                                    listen: false,
+                                  ).fetchAllFoods();
+                                } else {
+                                  if (_selectedCategory?.id == category.id) {
+                                    _selectedCategory = null;
+                                    Provider.of<FoodProvider>(
+                                      context,
+                                      listen: false,
+                                    ).fetchAllFoods();
+                                  } else {
+                                    _selectedCategory = category;
+                                    Provider.of<FoodProvider>(
+                                      context,
+                                      listen: false,
+                                    ).getFoodByCategory(category.name);
+                                  }
+                                }
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15,
+                                vertical: 10,
+                              ),
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? Colors.orange
+                                        : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  category.name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        isSelected
+                                            ? Colors.white
+                                            : Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                  );
-                },
-              ),
             ),
             const SizedBox(height: 10),
 
@@ -197,14 +228,21 @@ class _MenuScreenState extends State<MenuScreen> {
             ),
             const SizedBox(height: 10),
             Expanded(
-              child: foodProvider.isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : foodProvider.error.isNotEmpty
-                  ? Center(child: Text(foodProvider.error, style: TextStyle(color: Colors.red)))
-                  : ProductGridView(
-                filteredProducts: foodProvider.filteredFoods,
-                onProductTap: _navigateToSizeSelection,
-              ),
+              child:
+                  foodProvider.isLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : foodProvider.error.isNotEmpty
+                      ? Center(
+                        child: Text(
+                          foodProvider.error,
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      )
+                      : ProductGridView(
+                        filteredProducts: foodProvider.filteredFoods,
+                        onProductTap:
+                            (food) => _navigateToSizeSelection(context, food),
+                      ),
             ),
           ],
         ),

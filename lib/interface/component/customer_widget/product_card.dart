@@ -1,5 +1,3 @@
-// ignore_for_file: collection_methods_unrelated_type
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pizzaprint_v4/domain/model/food.dart';
@@ -118,7 +116,6 @@ class ProductCard extends StatelessWidget {
                           );
                         }
                       },
-
                       splashColor: Colors.orange.withOpacity(0.3),
                       highlightColor: Colors.orange.withOpacity(0.2),
                       child: Container(

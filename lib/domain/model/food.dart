@@ -34,4 +34,9 @@ class Food {
       'image': image,
     };
   }
+
+  String getFullImageUrl(String imageUrl) {
+    return "http://192.168.1.10:8000" + imageUrl.replaceFirst('/storage', '/public/storage');
+  }
+
 }

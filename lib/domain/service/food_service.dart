@@ -11,6 +11,7 @@ class FoodService {
 
       if (response.statusCode == 200) {
         List<dynamic> jsonData = jsonDecode(response.body)['data'];
+        print('Fetched foods: $jsonData');
         return jsonData.map((food) => Food.fromJson(food)).toList();
       } else {
         throw Exception('Failed to fetch foods: ${response.body}');

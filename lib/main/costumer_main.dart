@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:pizzaprint_v4/domain/provider/cart_provider.dart';
 import 'package:pizzaprint_v4/domain/provider/category_provider.dart';
 import 'package:pizzaprint_v4/domain/provider/food_provider.dart';
@@ -8,13 +9,16 @@ import 'package:pizzaprint_v4/interface/component/customer_widget/buttom_nav_bar
 import 'package:pizzaprint_v4/interface/screen/customer/google_signup.dart';
 import 'package:pizzaprint_v4/interface/screen/customer/signup_screen.dart';
 import 'package:pizzaprint_v4/interface/screen/customer/home_screen.dart';
+import 'package:pizzaprint_v4/sample/map_sample.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/provider/address_provider.dart';
+import '../env/environment.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setupMapbox();
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -34,7 +38,13 @@ void main() async {
       ],
       child: const MyApp(),
     ),
+
   );
+}
+
+void setupMapbox() {
+  const String mapboxAccessToken = Environment.mapboxApiKey; // Replace with your actual token
+  MapboxOptions.setAccessToken(mapboxAccessToken);
 }
 
 class MyApp extends StatelessWidget {
@@ -50,6 +60,7 @@ class MyApp extends StatelessWidget {
         '/signIn': (context) => const SignInScreen(),
         '/signUp': (context) => const CreateAccount(),
         '/home': (context) => HomeScreen(),
+        // '/currentLocation':(context) => MapBoxScreen()
       },
     );
   }

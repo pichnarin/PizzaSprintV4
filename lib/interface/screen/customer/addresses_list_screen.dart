@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pizzaprint_v4/sample/map_sample.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/model/addresses.dart';
@@ -18,14 +19,39 @@ class AddressListScreenState extends State<AddressListScreen> {
   @override
   void initState() {
     super.initState();
-    addresses = LocationService().fetchAllAddress(); // Fetching addresses
+    _fetchAddresses();
+  }
+
+  void _fetchAddresses() {
+    setState(() {
+      addresses = LocationService().fetchAllAddress();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Address'),
+        title: const Text('Select Address or Create One'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MapBoxScreen()),
+                ).then((value) {
+                  if (value != null) {
+                    print('Returned value: $value');
+                    _fetchAddresses(); // 🔄 Refresh address list after adding a new one
+                  }
+                });
+              },
+              icon: const Icon(Icons.add_location_alt_outlined),
+            ),
+          ),
+        ],
       ),
       body: FutureBuilder<List<Addresses>>(
         future: addresses,
@@ -38,19 +64,30 @@ class AddressListScreenState extends State<AddressListScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final addressList = snapshot.data!;
+          final addressList = snapshot.data ?? [];
+
+          if (addressList.isEmpty) {
+            return const Center(child: Text('No saved addresses. Add one using the "+" button.'));
+          }
 
           return ListView.builder(
             itemCount: addressList.length,
             itemBuilder: (context, index) {
               final address = addressList[index];
               return ListTile(
-                title: Text(address.address), // Show address details
+                title: Text(address.address.isNotEmpty ? address.address : 'Unnamed Address'),
                 onTap: () {
-                  // Add selected address to provider and pop it back
-                  Provider.of<AddressProvider>(context, listen: false)
-                      .addAddress(address.id, address.address);
-                  Navigator.pop(context, address.id); // Return address ID
+                  if (address.id != null) {
+                    Provider.of<AddressProvider>(
+                      context,
+                      listen: false,
+                    ).addAddress(address.id!, address.address); // Force unwrap with `!`
+                    Navigator.pop(context, address.id);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Address ID is missing")),
+                    );
+                  }
                 },
               );
             },

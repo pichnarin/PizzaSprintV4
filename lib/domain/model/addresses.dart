@@ -1,27 +1,25 @@
 class Addresses {
-  int id;
+  int? id; // Optional because it is auto-generated
   double latitude;
   double longitude;
   String? reference;
   String? city;
-  String? street;
   String? state;
   String? zip;
 
   Addresses({
-    required this.id,
+    this.id, // ID is optional
     required this.latitude,
     required this.longitude,
     this.reference,
     this.city,
-    this.street,
     this.state,
     this.zip,
   });
 
   factory Addresses.fromJson(Map<String, dynamic> json) {
     return Addresses(
-      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
+      id: json['id'] != null ? int.parse(json['id'].toString()) : null, // Parsing ID if present
       latitude: json['latitude'] is double
           ? json['latitude']
           : double.parse(json['latitude'].toString()),
@@ -30,24 +28,26 @@ class Addresses {
           : double.parse(json['longitude'].toString()),
       reference: json['reference'],
       city: json['city'],
-      street: json['street'],
       state: json['state'],
       zip: json['zip'],
     );
   }
 
-  String get address => '$street, $city, $state, $zip';
+  /// Return a formatted address, ensuring null safety
+  String get address =>
+      '${city ?? ''}, ${state ?? ''}, ${zip ?? ''}'.trim().replaceAll(RegExp(r',\s+,'), ',');
 
+  // Convert the model to a map for sending to API or saving
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
+    final data = {
       'latitude': latitude,
       'longitude': longitude,
       'reference': reference,
       'city': city,
-      'street': street,
       'state': state,
       'zip': zip,
     };
+    if (id != null) data['id'] = id; // Only include the ID if it's not null
+    return data;
   }
 }
