@@ -6,6 +6,7 @@ class Addresses {
   String? city;
   String? state;
   String? zip;
+  String? placeName;
 
   Addresses({
     this.id, // ID is optional
@@ -15,6 +16,7 @@ class Addresses {
     this.city,
     this.state,
     this.zip,
+    this.placeName
   });
 
   factory Addresses.fromJson(Map<String, dynamic> json) {
@@ -30,12 +32,13 @@ class Addresses {
       city: json['city'],
       state: json['state'],
       zip: json['zip'],
+      placeName: json['place_name'],
     );
   }
 
   /// Return a formatted address, ensuring null safety
   String get address =>
-      '${city ?? ''}, ${state ?? ''}, ${zip ?? ''}'.trim().replaceAll(RegExp(r',\s+,'), ',');
+      '$placeName${zip ?? ''}'.trim().replaceAll(RegExp(r',\s+,'), ',');
 
   // Convert the model to a map for sending to API or saving
   Map<String, dynamic> toJson() {
@@ -46,8 +49,11 @@ class Addresses {
       'city': city,
       'state': state,
       'zip': zip,
+      'place_name': placeName,
     };
     if (id != null) data['id'] = id; // Only include the ID if it's not null
     return data;
   }
+
+
 }

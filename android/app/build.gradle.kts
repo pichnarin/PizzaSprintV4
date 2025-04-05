@@ -30,7 +30,7 @@ android {
         applicationId = "com.example.pizzaprint_v4"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 35
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         multiDexEnabled = true
         versionCode = flutter.versionCode

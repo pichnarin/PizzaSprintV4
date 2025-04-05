@@ -66,6 +66,8 @@ class AddressListScreenState extends State<AddressListScreen> {
 
           final addressList = snapshot.data ?? [];
 
+          print("address list $addressList");
+
           if (addressList.isEmpty) {
             return const Center(child: Text('No saved addresses. Add one using the "+" button.'));
           }

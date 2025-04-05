@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:pizzaprint_v4/domain/provider/cart_provider.dart';
 import 'package:pizzaprint_v4/interface/utils/model_adapter.dart';
@@ -34,12 +35,14 @@ class CartItemWidget extends StatelessWidget {
                 // Image - Ensuring it stays within the card
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    item.food.image,
-                    width: 80,  // Fixed width for responsive design
-                    height: 80, // Fixed height for responsive design
-                    fit: BoxFit.cover, // Ensures the image doesn't overflow
-                  ),
+                  child: CachedNetworkImage(
+                    imageUrl: item.food.image,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => const Icon(Icons.error),
+                  )
                 ),
                 const SizedBox(height: 8),
                 // Food name under the image

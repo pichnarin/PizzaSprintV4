@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as gl;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
+import 'package:pizzaprint_v4/domain/service/track_service.dart';
 import 'package:pizzaprint_v4/env/environment.dart';
+
+import '../../domain/model/track.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
   final int orderId;
@@ -20,11 +23,13 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
   mp.PointAnnotationManager? annotationManager;
   mp.PolylineAnnotationManager? polylineManager;
   StreamSubscription? userPositionStream;
+  TrackService trackService = TrackService();
 
   @override
   void initState() {
     super.initState();
     _setupPositionTracking();
+    _fetchDriverLocation();
   }
 
   @override
@@ -55,45 +60,27 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
     );
 
     // Initialize annotation managers
-    annotationManager = await mapboxController?.annotations.createPointAnnotationManager();
-    polylineManager = await mapboxController?.annotations.createPolylineAnnotationManager();
+    annotationManager =
+        await mapboxController?.annotations.createPointAnnotationManager();
+    polylineManager =
+        await mapboxController?.annotations.createPolylineAnnotationManager();
 
     // Load marker images
-    final Uint8List customerMarker = await loadMarkerImage("assets/images/user1.png");
-    final Uint8List driverMarker = await loadMarkerImage("assets/images/delivery-guy.png");
-
-    // Customer location (Phnom Penh, Cambodia)
-    double customerLat = 11.5564;
-    double customerLng = 104.9282;
-
-    // Driver location (Nearby in Phnom Penh)
-    double driverLat = 11.5600;
-    double driverLng = 104.9350;
+    final Uint8List customerMarker = await loadMarkerImage(
+      "assets/images/user1.png",
+    );
+    final Uint8List driverMarker = await loadMarkerImage(
+      "assets/images/delivery-guy.png",
+    );
 
     // Add customer marker
     annotationManager?.create(
       mp.PointAnnotationOptions(
         image: customerMarker,
         iconSize: 0.3,
-        geometry: mp.Point(
-          coordinates: mp.Position(customerLng, customerLat),
-        ),
+        geometry: mp.Point(coordinates: mp.Position(104.9282, 11.5564)),
       ),
     );
-
-    // Add driver marker
-    annotationManager?.create(
-      mp.PointAnnotationOptions(
-        image: driverMarker,
-        iconSize: 0.3,
-        geometry: mp.Point(
-          coordinates: mp.Position(driverLng, driverLat),
-        ),
-      ),
-    );
-
-    // Draw route between customer and driver
-    _drawRoute(mp.Position(customerLng, customerLat), mp.Position(driverLng, driverLat));
   }
 
   void _drawRoute(mp.Position start, mp.Position end) {
@@ -101,14 +88,9 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
     polylineManager?.create(
       mp.PolylineAnnotationOptions(
-        geometry: mp.LineString(
-          coordinates: [
-            start,
-            end,
-          ],
-        ),
-        lineWidth: 3.0,
-        lineColor: Colors.blue.value,
+        geometry: mp.LineString(coordinates: [start, end]),
+        lineWidth: 5.0,
+        lineColor: Colors.green.value,
       ),
     );
   }
@@ -141,7 +123,7 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
     // Setup location stream
     gl.LocationSettings locationSettings = gl.LocationSettings(
       accuracy: gl.LocationAccuracy.high,
-      distanceFilter: 100,
+      distanceFilter: 300,
     );
 
     userPositionStream?.cancel();
@@ -162,6 +144,39 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
       }
     });
   }
+
+  Future<void> _fetchDriverLocation() async {
+    try {
+      final response = await trackService.fetchDriverUserLocation(widget.orderId);
+
+      final driverLocation = response['driver_location'];
+      final customerLocation = response['customer_location'];
+
+      double driverLat = double.parse(driverLocation['latitude'].toString());
+      double driverLng = double.parse(driverLocation['longitude'].toString());
+      double customerLat = double.parse(customerLocation['latitude'].toString());
+      double customerLng = double.parse(customerLocation['longitude'].toString());
+
+      // Add driver marker
+      final Uint8List driverMarker = await loadMarkerImage("assets/images/delivery-guy.png");
+      annotationManager?.create(
+        mp.PointAnnotationOptions(
+          image: driverMarker,
+          iconSize: 0.3,
+          geometry: mp.Point(coordinates: mp.Position(driverLng, driverLat)),
+        ),
+      );
+
+      // Draw route between customer and driver
+      _drawRoute(
+        mp.Position(customerLng, customerLat),
+        mp.Position(driverLng, driverLat),
+      );
+    } catch (e) {
+      print('Error fetching driver location: $e');
+    }
+  }
+
 
   Future<Uint8List> loadMarkerImage(String assetPath) async {
     var byteData = await rootBundle.load(assetPath);
