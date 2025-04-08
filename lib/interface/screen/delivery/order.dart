@@ -252,14 +252,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 content: Text("Order accepted successfully!"),
                               ),
                             );
-
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => PickupScreen(order: order),
-                              ),
-                            );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(

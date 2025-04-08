@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
 
-import '../domain/model/addresses.dart';
-import '../domain/service/location_service.dart';
+import '../../../domain/model/addresses.dart';
+import '../../../domain/service/location_service.dart';
 
 class MapBoxScreen extends StatefulWidget {
   const MapBoxScreen({super.key});

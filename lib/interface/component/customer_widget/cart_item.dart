@@ -6,11 +6,13 @@ import 'package:pizzaprint_v4/interface/utils/model_adapter.dart';
 class CartItemWidget extends StatelessWidget {
   final CartItem item;
   final Function(String) removeFromCart;
+  final Function(String, int) updateQuantity;
 
   const CartItemWidget({
     super.key,
     required this.item,
     required this.removeFromCart,
+    required this.updateQuantity,
   });
 
   @override
@@ -40,15 +42,17 @@ class CartItemWidget extends StatelessWidget {
                     width: 80,
                     height: 80,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => const CircularProgressIndicator(),
-                    errorWidget: (context, url, error) => const Icon(Icons.error),
-                  )
+                    placeholder:
+                        (context, url) => const CircularProgressIndicator(),
+                    errorWidget:
+                        (context, url, error) => const Icon(Icons.error),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 // Food name under the image
                 Text(
                   item.food.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14, // Adjust the font size for better readability
                   ),
@@ -58,33 +62,54 @@ class CartItemWidget extends StatelessWidget {
                 // Price Display - below food name
                 Text(
                   "\$${totalItemPrice.toStringAsFixed(2)}",
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: Colors.orange,
                   ),
                 ),
-                const SizedBox(height: 8),
-                // Remove button - below the price
-                IconButton(
-                  onPressed: () {
-                    removeFromCart("${item.food.id}_${item.size}");
-                  },
-                  icon: Icon(Icons.remove_circle_outline, color: Colors.orange),
-                ),
               ],
             ),
             const SizedBox(width: 16),
-            
+
             // Right Column with Quantity
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // Quantity display
-                  Text(
-                    "Quantity: ${item.quantity}",
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  // Quantity display with increase and decrease buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () {
+                          if (item.quantity > 1) {
+                            updateQuantity(
+                              "${item.food.id}_${item.size}",
+                              item.quantity - 1,
+                            );
+                          } else {
+                            removeFromCart("${item.food.id}_${item.size}");
+                          }
+                        },
+                        color: Colors.orange,
+                      ),
+                      Text(
+                        "${item.quantity}",
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: () {
+                          updateQuantity(
+                            "${item.food.id}_${item.size}",
+                            item.quantity + 1,
+                          );
+                        },
+                        color: Colors.orange,
+                      ),
+                    ],
                   ),
                 ],
               ),

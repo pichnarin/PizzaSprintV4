@@ -24,16 +24,16 @@ class _CartScreenState extends State<CartScreen> {
     final addressProvider = context.read<AddressProvider>();
 
     if (cartProvider.cartItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Your cart is empty!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Your cart is empty!")));
       return;
     }
 
     if (addressProvider.address.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select an address")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please select an address")));
       return;
     }
 
@@ -46,9 +46,9 @@ class _CartScreenState extends State<CartScreen> {
     await orderService.placeOrder(orderData);
 
     cartProvider.clearCart();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Order placed successfully!")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Order placed successfully!")));
   }
 
   @override
@@ -64,28 +64,44 @@ class _CartScreenState extends State<CartScreen> {
         backgroundColor: PizzaColors.primary,
         foregroundColor: PizzaColors.white,
       ),
-      body: cartItemsList.isEmpty
-          ? const Center(
-        child: Text(
-          "Your cart is empty",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-      )
-          : ListView.builder(
-        itemCount: cartItemsList.length,
-        itemBuilder: (context, index) {
-          final item = cartItemsList[index];
-          return CartItemWidget(
-            item: item,
-            removeFromCart: cartProvider.removeFromCart,
-          );
-        },
+      body:
+          cartItemsList.isEmpty
+              ? const Center(
+                child: Text(
+                  "Your cart is empty",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              )
+              : ListView.builder(
+                itemCount: cartItemsList.length,
+                itemBuilder: (context, index) {
+                  final item = cartItemsList[index];
+                  return CartItemWidget(
+                    item: item,
+                    removeFromCart: cartProvider.removeFromCart,
+                    updateQuantity: (cartItemId, quantity) {
+                      if (quantity > 0) {
+                        cartProvider.updateQuantity(item, quantity);
+                      } else {
+                        cartProvider.removeFromCart(cartItemId);
+                      }
+                    },
+                  );
+                },
+              ),
+      bottomNavigationBar: _buildBottomNavigationBar(
+        context,
+        cartProvider,
+        addressProvider,
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(context, cartProvider, addressProvider),
     );
   }
 
-  Widget _buildBottomNavigationBar(BuildContext context, CartProvider cartProvider, AddressProvider addressProvider) {
+  Widget _buildBottomNavigationBar(
+    BuildContext context,
+    CartProvider cartProvider,
+    AddressProvider addressProvider,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -93,20 +109,31 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Select Address:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Select Address:",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   ListTile(
-                    title: Text(addressProvider.address.isNotEmpty ? addressProvider.address.values.first : "Choose an Address"),
+                    title: Text(
+                      addressProvider.address.isNotEmpty
+                          ? addressProvider.address.values.first
+                          : "Choose an Address",
+                    ),
                     leading: const Icon(Icons.location_on),
                     onTap: () async {
                       final selectedAddressId = await Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AddressListScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const AddressListScreen(),
+                        ),
                       );
                       if (selectedAddressId != null) {
                         setState(() {});
@@ -118,9 +145,13 @@ class _CartScreenState extends State<CartScreen> {
                     title: Text("Payment Method: $_selectedPaymentMethod"),
                     leading: const Icon(Icons.payment),
                     onTap: () async {
-                      final selectedPaymentMethod = await _selectPaymentMethod(context);
+                      final selectedPaymentMethod = await _selectPaymentMethod(
+                        context,
+                      );
                       if (selectedPaymentMethod != null) {
-                        setState(() => _selectedPaymentMethod = selectedPaymentMethod);
+                        setState(
+                          () => _selectedPaymentMethod = selectedPaymentMethod,
+                        );
                       }
                     },
                   ),
@@ -142,15 +173,28 @@ class _CartScreenState extends State<CartScreen> {
   Future<String?> _selectPaymentMethod(BuildContext context) async {
     return await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(title: const Text('Cash on Delivery'), onTap: () => Navigator.pop(context, 'Cash on Delivery')),
-          ListTile(title: const Text('Credit/Debit Card'), onTap: () => Navigator.pop(context, 'Credit/Debit Card')),
-          ListTile(title: const Text('PayPal'), onTap: () => Navigator.pop(context, 'PayPal')),
-          ListTile(title: const Text('ABA'), onTap: () => Navigator.pop(context, 'ABA')),
-        ],
-      ),
+      builder:
+          (context) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Cash on Delivery'),
+                onTap: () => Navigator.pop(context, 'Cash on Delivery'),
+              ),
+              ListTile(
+                title: const Text('Credit/Debit Card'),
+                onTap: () => Navigator.pop(context, 'Credit/Debit Card'),
+              ),
+              ListTile(
+                title: const Text('PayPal'),
+                onTap: () => Navigator.pop(context, 'PayPal'),
+              ),
+              ListTile(
+                title: const Text('ABA'),
+                onTap: () => Navigator.pop(context, 'ABA'),
+              ),
+            ],
+          ),
     );
   }
 }

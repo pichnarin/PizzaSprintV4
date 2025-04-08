@@ -4,29 +4,27 @@ import 'package:pizzaprint_v4/domain/model/food.dart';
 import 'package:pizzaprint_v4/domain/provider/cart_provider.dart';
 import 'package:pizzaprint_v4/domain/provider/food_provider.dart';
 import 'package:pizzaprint_v4/domain/service/category_service.dart';
-import 'package:pizzaprint_v4/interface/component/customer_widget/custom_app_bar.dart';
 import 'package:pizzaprint_v4/interface/component/customer_widget/product_grid_view.dart';
 import 'package:pizzaprint_v4/interface/component/customer_widget/search_bar.dart';
 import 'package:pizzaprint_v4/interface/component/customer_widget/size_selection_screen.dart';
 import 'package:provider/provider.dart';
 
 class MenuScreen extends StatefulWidget {
-  String? selectedLocation;
-
-  MenuScreen({super.key, this.selectedLocation});
+  const MenuScreen({super.key});
 
   @override
-  _MenuScreenState createState() => _MenuScreenState();
+  State<MenuScreen> createState() => _MenuScreenState();
 }
 
 class _MenuScreenState extends State<MenuScreen> {
   final TextEditingController _searchController = TextEditingController();
   final int _selectedQuantity = 1;
-  Category? _selectedCategory;
   final CategoryService _categoryService = CategoryService();
   bool _isLoading = false;
+  bool _showSearchBar = false;
   String _error = '';
   List<Category> _categories = [];
+  Category? _selectedCategory;
 
   @override
   void initState() {
@@ -45,7 +43,6 @@ class _MenuScreenState extends State<MenuScreen> {
 
     try {
       final fetchedCategories = await _categoryService.fetchCategories();
-      // Add the "All" category at the beginning of the list
       setState(() {
         _categories = [Category(id: 0, name: 'All')] + fetchedCategories;
       });
@@ -85,72 +82,49 @@ class _MenuScreenState extends State<MenuScreen> {
     );
   }
 
-  void _selectLocation() async {
-    final selectedLocation = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Home'),
-              onTap: () => Navigator.pop(context, 'Home'),
-            ),
-            ListTile(
-              title: const Text('Office'),
-              onTap: () => Navigator.pop(context, 'Office'),
-            ),
-            ListTile(
-              title: const Text('Other'),
-              onTap: () => Navigator.pop(context, 'Other'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (selectedLocation != null) {
-      setState(() {
-        widget.selectedLocation = selectedLocation;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final foodProvider = Provider.of<FoodProvider>(context);
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: CustomAppBar(
-        title: 'Pizza Menu',
-        selectedLocation: widget.selectedLocation,
-        onLocationPressed: _selectLocation,
+      appBar: AppBar(
+        title: const Text('Pizza Menu'),
+        actions: [
+          IconButton(
+            icon: Icon(_showSearchBar ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _showSearchBar = !_showSearchBar;
+              });
+            },
+          ),
+        ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SearchBarWidget(controller: _searchController, onSearch: _onSearch),
-            const SizedBox(height: 10),
-
-            /// Categories Section
-            Text(
-              "Categories",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
+            if (_showSearchBar)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SearchBarWidget(
+                  controller: _searchController,
+                  onSearch: _onSearch,
+                ),
+              ),
+            const SizedBox(height: 8),
             SizedBox(
-              height: 50,
+              height: 32,
               child:
                   _isLoading
-                      ? Center(child: CircularProgressIndicator())
+                      ? const Center(child: CircularProgressIndicator())
                       : _error.isNotEmpty
                       ? Center(
                         child: Text(
                           _error,
-                          style: TextStyle(color: Colors.red),
+                          style: const TextStyle(color: Colors.red),
                         ),
                       )
                       : ListView.builder(
@@ -165,47 +139,36 @@ class _MenuScreenState extends State<MenuScreen> {
                             onTap: () {
                               setState(() {
                                 if (category.name == 'All') {
-                                  // Show all foods when "All" is selected
                                   _selectedCategory = null;
-                                  Provider.of<FoodProvider>(
-                                    context,
-                                    listen: false,
-                                  ).fetchAllFoods();
+                                  foodProvider.fetchAllFoods();
+                                } else if (_selectedCategory?.id ==
+                                    category.id) {
+                                  _selectedCategory = null;
+                                  foodProvider.fetchAllFoods();
                                 } else {
-                                  if (_selectedCategory?.id == category.id) {
-                                    _selectedCategory = null;
-                                    Provider.of<FoodProvider>(
-                                      context,
-                                      listen: false,
-                                    ).fetchAllFoods();
-                                  } else {
-                                    _selectedCategory = category;
-                                    Provider.of<FoodProvider>(
-                                      context,
-                                      listen: false,
-                                    ).getFoodByCategory(category.name);
-                                  }
+                                  _selectedCategory = category;
+                                  foodProvider.getFoodByCategory(category.name);
                                 }
                               });
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                                vertical: 10,
+                                horizontal: 10,
+                                vertical: 6,
                               ),
-                              margin: const EdgeInsets.only(right: 10),
+                              margin: const EdgeInsets.only(right: 6),
                               decoration: BoxDecoration(
                                 color:
                                     isSelected
                                         ? Colors.orange
                                         : Colors.grey[200],
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(15),
                               ),
                               child: Center(
                                 child: Text(
                                   category.name,
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.bold,
                                     color:
                                         isSelected
@@ -219,23 +182,16 @@ class _MenuScreenState extends State<MenuScreen> {
                         },
                       ),
             ),
-            const SizedBox(height: 10),
-
-            /// Foods Section
-            Text(
-              "Available Foods",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Expanded(
               child:
                   foodProvider.isLoading
-                      ? Center(child: CircularProgressIndicator())
+                      ? const Center(child: CircularProgressIndicator())
                       : foodProvider.error.isNotEmpty
                       ? Center(
                         child: Text(
                           foodProvider.error,
-                          style: TextStyle(color: Colors.red),
+                          style: const TextStyle(color: Colors.red),
                         ),
                       )
                       : ProductGridView(

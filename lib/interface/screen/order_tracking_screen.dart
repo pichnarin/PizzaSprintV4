@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart' as gl;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mp;
 import 'package:pizzaprint_v4/domain/service/track_service.dart';
-import 'package:pizzaprint_v4/env/environment.dart';
-
-import '../../domain/model/track.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class OrderTrackingScreen extends StatefulWidget {
   final int orderId;
@@ -23,18 +20,25 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
   mp.PointAnnotationManager? annotationManager;
   mp.PolylineAnnotationManager? polylineManager;
   StreamSubscription? userPositionStream;
+  late IO.Socket socket;
   TrackService trackService = TrackService();
+  mp.Position? customerPosition;
+  mp.PointAnnotation? driverAnnotation;
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
     _setupPositionTracking();
     _fetchDriverLocation();
+    _initializeSocket();
   }
 
   @override
   void dispose() {
     userPositionStream?.cancel();
+    socket.dispose();
     super.dispose();
   }
 
@@ -42,9 +46,18 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Track Order ${widget.orderId}')),
-      body: mp.MapWidget(
-        onMapCreated: _onMapCreated,
-        styleUri: mp.MapboxStyles.SATELLITE_STREETS,
+      body: Stack(
+        children: [
+          mp.MapWidget(
+            onMapCreated: _onMapCreated,
+            styleUri: mp.MapboxStyles.SATELLITE_STREETS,
+          ),
+          if (isLoading) Center(child: CircularProgressIndicator()),
+          if (errorMessage != null)
+            Center(
+              child: Text(errorMessage!, style: TextStyle(color: Colors.red)),
+            ),
+        ],
       ),
     );
   }
@@ -54,37 +67,18 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
       mapboxController = controller;
     });
 
-    // Enable user location tracking
     mapboxController?.location.updateSettings(
       mp.LocationComponentSettings(enabled: true, pulsingEnabled: true),
     );
 
-    // Initialize annotation managers
     annotationManager =
         await mapboxController?.annotations.createPointAnnotationManager();
     polylineManager =
         await mapboxController?.annotations.createPolylineAnnotationManager();
-
-    // Load marker images
-    final Uint8List customerMarker = await loadMarkerImage(
-      "assets/images/user1.png",
-    );
-    final Uint8List driverMarker = await loadMarkerImage(
-      "assets/images/delivery-guy.png",
-    );
-
-    // Add customer marker
-    annotationManager?.create(
-      mp.PointAnnotationOptions(
-        image: customerMarker,
-        iconSize: 0.3,
-        geometry: mp.Point(coordinates: mp.Position(104.9282, 11.5564)),
-      ),
-    );
   }
 
   void _drawRoute(mp.Position start, mp.Position end) {
-    polylineManager?.deleteAll(); // Clear old route
+    polylineManager?.deleteAll();
 
     polylineManager?.create(
       mp.PolylineAnnotationOptions(
@@ -99,31 +93,36 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
     bool serviceEnabled;
     gl.LocationPermission permission;
 
-    // Check if location services are enabled
     serviceEnabled = await gl.Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
+      setState(() {
+        errorMessage = 'Location services are disabled.';
+      });
+      return;
     }
 
-    // Check location permissions
     permission = await gl.Geolocator.checkPermission();
     if (permission == gl.LocationPermission.denied) {
       permission = await gl.Geolocator.requestPermission();
       if (permission == gl.LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
+        setState(() {
+          errorMessage = 'Location permissions are denied';
+        });
+        return;
       }
     }
 
     if (permission == gl.LocationPermission.deniedForever) {
-      return Future.error(
-        'Location permissions are permanently denied, we cannot request permissions.',
-      );
+      setState(() {
+        errorMessage =
+            'Location permissions are permanently denied, we cannot request permissions.';
+      });
+      return;
     }
 
-    // Setup location stream
     gl.LocationSettings locationSettings = gl.LocationSettings(
       accuracy: gl.LocationAccuracy.high,
-      distanceFilter: 300,
+      distanceFilter: 500,
     );
 
     userPositionStream?.cancel();
@@ -131,9 +130,6 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
       locationSettings: locationSettings,
     ).listen((gl.Position? position) {
       if (position != null && mapboxController != null) {
-        print("Lat: ${position.latitude}, Lng: ${position.longitude}");
-
-        // Update map camera with new position
         mapboxController?.setCamera(
           mp.CameraOptions(
             center: mp.Point(
@@ -147,19 +143,34 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   Future<void> _fetchDriverLocation() async {
     try {
-      final response = await trackService.fetchDriverUserLocation(widget.orderId);
+      final response = await trackService.fetchCustomerDriverLocation(
+        widget.orderId,
+      );
 
       final driverLocation = response['driver_location'];
       final customerLocation = response['customer_location'];
 
       double driverLat = double.parse(driverLocation['latitude'].toString());
       double driverLng = double.parse(driverLocation['longitude'].toString());
-      double customerLat = double.parse(customerLocation['latitude'].toString());
-      double customerLng = double.parse(customerLocation['longitude'].toString());
+      double customerLat = double.parse(
+        customerLocation['latitude'].toString(),
+      );
+      double customerLng = double.parse(
+        customerLocation['longitude'].toString(),
+      );
 
-      // Add driver marker
-      final Uint8List driverMarker = await loadMarkerImage("assets/images/delivery-guy.png");
-      annotationManager?.create(
+      customerPosition = mp.Position(customerLng, customerLat);
+
+      final Uint8List driverMarker = await loadMarkerImage(
+        "assets/images/delivery-guy.png",
+      );
+      final Uint8List customerMarker = await loadMarkerImage(
+        "assets/images/user1.png",
+      );
+
+      annotationManager?.deleteAll();
+
+      driverAnnotation = await annotationManager?.create(
         mp.PointAnnotationOptions(
           image: driverMarker,
           iconSize: 0.3,
@@ -167,16 +178,88 @@ class OrderTrackingScreenState extends State<OrderTrackingScreen> {
         ),
       );
 
-      // Draw route between customer and driver
-      _drawRoute(
-        mp.Position(customerLng, customerLat),
-        mp.Position(driverLng, driverLat),
+      annotationManager?.create(
+        mp.PointAnnotationOptions(
+          image: customerMarker,
+          iconSize: 0.3,
+          geometry: mp.Point(
+            coordinates: mp.Position(customerLng, customerLat),
+          ),
+        ),
       );
+
+      if (customerPosition != null) {
+        _drawRoute(customerPosition!, mp.Position(driverLng, driverLat));
+      }
+
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
-      print('Error fetching driver location: $e');
+      setState(() {
+        errorMessage = 'Error fetching driver location: $e';
+        isLoading = false;
+      });
     }
   }
 
+  void _initializeSocket() {
+    socket = IO.io('http://192.168.1.10:3000', <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': false,
+    });
+
+    socket.connect();
+
+    socket.onConnect((_) {
+      print('Connected to socket!');
+    });
+
+    socket.onDisconnect((_) {
+      print('Disconnected from socket!');
+    });
+
+    socket.onConnectError((err) {
+      print('Connection error: $err');
+    });
+
+    socket.on('driver-location', (data) async {
+      print('Real-time driver location: $data');
+
+      double? driverLat =
+          data['driver_lat'] != null
+              ? double.tryParse(data['driver_lat'].toString())
+              : null;
+      double? driverLng =
+          data['driver_long'] != null
+              ? double.tryParse(data['driver_long'].toString())
+              : null;
+
+      if (driverLat == null ||
+          driverLng == null ||
+          driverLat.isNaN ||
+          driverLng.isNaN) {
+        print('Invalid driver location data');
+        return;
+      }
+
+      if (driverAnnotation != null) {
+        await annotationManager?.delete(driverAnnotation!);
+      }
+
+      driverAnnotation = await annotationManager?.create(
+        mp.PointAnnotationOptions(
+          image: await loadMarkerImage("assets/images/delivery-guy.png"),
+          iconSize: 0.3,
+          geometry: mp.Point(coordinates: mp.Position(driverLng, driverLat)),
+        ),
+      );
+
+      if (customerPosition != null) {
+        _drawRoute(customerPosition!, mp.Position(driverLng, driverLat));
+      }
+    });
+  }
 
   Future<Uint8List> loadMarkerImage(String assetPath) async {
     var byteData = await rootBundle.load(assetPath);

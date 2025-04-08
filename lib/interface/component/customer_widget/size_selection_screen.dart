@@ -206,7 +206,7 @@ class _SizeSelectionScreenState extends State<SizeSelectionScreen> {
                         padding: EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: Text("Place My Order", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: Text("Add to cart", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
