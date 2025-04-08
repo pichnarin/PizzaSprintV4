@@ -37,12 +37,7 @@ class ProductCard extends StatelessWidget {
                     placeholder:
                         (context, url) =>
                             const Center(child: CircularProgressIndicator()),
-                    errorWidget:
-                        (context, url, error) => const Icon(
-                          Icons.error,
-                          color: Colors.red,
-                          size: 50,
-                        ),
+                    errorWidget: (context, url, error) => Image.asset('assets/images/restaurant.png'),
                   ),
                 ),
               ),

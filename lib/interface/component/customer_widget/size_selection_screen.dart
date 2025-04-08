@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:pizzaprint_v4/domain/model/food.dart';
 import 'package:pizzaprint_v4/domain/provider/cart_provider.dart';
@@ -97,7 +98,15 @@ class _SizeSelectionScreenState extends State<SizeSelectionScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Image.network(widget.food.image, height: 180, fit: BoxFit.cover),
+                    child: CachedNetworkImage(
+                      imageUrl: widget.food.image,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      placeholder:
+                          (context, url) =>
+                      const Center(child: CircularProgressIndicator()),
+                      errorWidget: (context, url, error) => Image.asset('assets/images/restaurant.png'),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(12.0),
