@@ -13,6 +13,7 @@ import 'package:pizzaprint_v4/interface/screen/customer/create_location.dart';
 import 'package:provider/provider.dart';
 
 import '../domain/provider/address_provider.dart';
+import '../domain/provider/user_profile_provider.dart';
 import '../env/environment.dart';
 
 
@@ -35,6 +36,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => FoodProvider()),
         ChangeNotifierProvider(create: (context) => CategoryProvider()),
         ChangeNotifierProvider(create: (context) => AddressProvider()),
+        ChangeNotifierProvider(create: (context) => UserProfileProvider()),
       ],
       child: const MyApp(),
     ),

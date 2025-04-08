@@ -1,51 +1,8 @@
-// import 'package:flutter/material.dart';
-
-// class UserProfileScreen extends StatelessWidget {
-//   const UserProfileScreen({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text("My Profile"),
-//         backgroundColor: Colors.orangeAccent,
-//       ),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             const Center(
-//               child: CircleAvatar(
-//                 radius: 50,
-//                 backgroundImage: AssetImage("assets/images/user_avatar.png"), // Change path as needed
-//               ),
-//             ),
-//             const SizedBox(height: 16),
-//             const Text(
-//               "Marvis Ighedosa",
-//               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-//             ),
-//             const SizedBox(height: 8),
-//             const Text("Dosamarvis@gmail.com"),
-//             const SizedBox(height: 8),
-//             const Text("+234 9011039271"),
-//             const SizedBox(height: 8),
-//             const Text("No 15 Uti Street, Off Ovie Palace Road, Effurun, Delta State"),
-//             const SizedBox(height: 16),
-//             ElevatedButton(
-//               onPressed: () {
-//                 // Add edit functionality
-//               },
-//               child: const Text("Edit Profile"),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:pizzaprint_v4/env/user_local_storage/secure_storage.dart';
+import 'package:provider/provider.dart'; // Import the provider package
+import 'package:pizzaprint_v4/domain/provider/user_profile_provider.dart'; // Import UserProfileProvider
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -55,107 +12,63 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
+  bool _isLoading = true;
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            color: Color.fromRGBO(64, 105, 225, 1),
-          ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0, // Remove shadow
-      ),
-      body: SingleChildScrollView( // Make it scrollable
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            const Center(
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage: NetworkImage(
-                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6hw785Erl1suQt1-j1UM6ejHtmOeJ1XnankcmnFlcSrVOpU1K53aZli3ahKL88fsnX68hJC7_zsWOmiKOi74ceQ'),
-              ),
-            ),
-            const SizedBox(height: 20),
-            buildUserInfoDisplay('Marn Vannda', 'Name'),
-            buildUserInfoDisplay('+1 234 567 890', 'Phone'),
-            buildUserInfoDisplay('VD.skull@gmail.com', 'Email'),
-            buildAbout(
-                "This is a short bio about the user. You can replace it with actual content."),
-            const SizedBox(height: 20),
-            buildLogoutButton(context),
-            const SizedBox(height: 30),
-          ],
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    _loadUserProfile();
   }
 
+  // Load user profile via the provider
+  Future<void> _loadUserProfile() async {
+    try {
+      await Provider.of<UserProfileProvider>(context, listen: false).loadUserProfile();
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      // Handle any errors that might occur during loading the profile
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load user profile: $e')),
+      );
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Method to display user info
   Widget buildUserInfoDisplay(String value, String title) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Container(
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey, width: 1)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  value,
-                  style: const TextStyle(fontSize: 16, height: 1.4),
-                ),
-              ),
-            ),
-          ],
+    padding: const EdgeInsets.only(bottom: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey,
+          ),
         ),
-      );
-
-  Widget buildAbout(String aboutText) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Tell Us About Yourself',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
+        const SizedBox(height: 5),
+        Container(
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: Colors.grey, width: 1)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              value.isEmpty ? 'Not Provided' : value,
+              style: const TextStyle(fontSize: 16, height: 1.4),
             ),
-            const SizedBox(height: 5),
-            Container(
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey, width: 1)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  aboutText,
-                  style: const TextStyle(fontSize: 16, height: 1.4),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      );
-
+      ],
+    ),
+  );
+  // Logout button
   Widget buildLogoutButton(BuildContext context) {
     return SizedBox(
       width: 200,
@@ -189,15 +102,69 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                // Clear user profile data from secure storage
+                await secureLocalStorage.deleteUserProfile();
+                // Reset the provider data as well
+                Provider.of<UserProfileProvider>(context, listen: false).clearUserProfile();
                 Navigator.of(context).pop();
-                print('User logged out'); // Replace with actual logout logic
+                Navigator.pushReplacementNamed(context, '/home'); // Navigate to the home screen
               },
               child: const Text('OK', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
       },
+    );
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    final userProfileProvider = Provider.of<UserProfileProvider>(context);
+
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'Profile',
+          style: TextStyle(color: Color.fromRGBO(64, 105, 225, 1)),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Center(
+              child: CircleAvatar(
+                radius: 50,
+                backgroundImage: NetworkImage(
+                  userProfileProvider.profileImage.isEmpty
+                      ? 'https://your-default-avatar.png' // Make sure you use a real default image or a local one
+                      : userProfileProvider.profileImage,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            buildUserInfoDisplay(userProfileProvider.username, 'Name'),
+            buildUserInfoDisplay(userProfileProvider.email, 'Email'),
+            // buildAbout('Bio: ${userProfileProvider.username}'),
+            const SizedBox(height: 20),
+            buildLogoutButton(context),
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
     );
   }
 }

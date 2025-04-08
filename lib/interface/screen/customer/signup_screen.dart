@@ -5,6 +5,9 @@ import 'package:pizzaprint_v4/interface/component/driver_widget/custom_button.da
 import 'package:pizzaprint_v4/interface/component/driver_widget/delivery_social_button.dart';
 import 'package:pizzaprint_v4/interface/component/driver_widget/delivey_divider.dart';
 import 'package:pizzaprint_v4/interface/theme/app_pallete.dart';
+import 'package:provider/provider.dart';
+
+import '../../../domain/provider/user_profile_provider.dart';
 
 
 class SignInScreen extends StatefulWidget {
@@ -31,6 +34,14 @@ class _SignInScreenState extends State<SignInScreen> {
       if (user != null) {
         final idToken = await user.getIdToken();
         if (idToken != null) {
+
+          // Set user profile information in the provider
+          Provider.of<UserProfileProvider>(context, listen: false).setUserProfile(
+            user.displayName ?? '',  // Set username (or empty if not available)
+            user.email ?? '',         // Set email
+            user.photoURL ?? '',      // Set profile image URL
+          );
+
           await googleSignInService.sendIdTokenToBackend(idToken);
           Navigator.pushReplacementNamed(context, '/menu'); // ✅ Redirect to Menu
         }
@@ -54,6 +65,14 @@ class _SignInScreenState extends State<SignInScreen> {
       final UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(email: email, password: password);
       if (userCredential.user != null) {
+        // Set user profile information in the provider
+        Provider.of<UserProfileProvider>(context, listen: false).setUserProfile(
+          userCredential.user!.displayName ?? '',  // Set username (or empty if not available)
+          userCredential.user!.email ?? '',         // Set email
+          userCredential.user!.photoURL ?? '',      // Set profile image URL
+        );
+        Provider.of<UserProfileProvider>(context, listen: false).refreshUserProfile();
+
         // If successful, navigate to the menu screen
         Navigator.pushReplacementNamed(context, '/menu');
       }
