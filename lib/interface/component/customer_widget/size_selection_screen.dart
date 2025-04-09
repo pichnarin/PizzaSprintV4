@@ -101,7 +101,8 @@ class _SizeSelectionScreenState extends State<SizeSelectionScreen> {
                     child: CachedNetworkImage(
                       imageUrl: widget.food.image,
                       fit: BoxFit.cover,
-                      width: double.infinity,
+                      height: 300,
+                      width: 300,
                       placeholder:
                           (context, url) =>
                       const Center(child: CircularProgressIndicator()),
